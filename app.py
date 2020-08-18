@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from flask import Flask, jsonify, make_response, request, abort
+from datetime import datetime
 from models import User
 import json
 
@@ -8,11 +9,13 @@ app = Flask(__name__)
 
 @app.route('/users', methods=['GET'])
 def api_get_users():
+    """Выводит список зарегистрированных пользователей"""
     return jsonify({'users': User.get_users()})
 
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def api_get_user_by_id(user_id):
+    """Выводит пользователя по его id"""
     user = User.get_user_by_id(user_id)
     if user:
         return jsonify({'user': user[0]})
@@ -22,6 +25,7 @@ def api_get_user_by_id(user_id):
 
 @app.route('/create_user', methods=['POST'])
 def api_create_user():
+    """Создаёт нового пользователя в базу"""
     if not request.json or not 'name' in request.json:
         abort(400)
 
@@ -32,9 +36,10 @@ def api_create_user():
     new_user.create_user()
     return jsonify({'result': True})
 
+
 @app.route('/users/<int:user_id>', methods=['DELETE'])
 def api_delete_user(user_id):
-
+    """Удаляет пользователя из базы"""
     user = User.get_user_by_id(user_id)
     all_users = User.get_users()
     if not user:
@@ -47,28 +52,25 @@ def api_delete_user(user_id):
 
 @app.route('/users/<int:user_id>', methods=['PUT'])
 def api_update_user(user_id):
+    """Изменяет данные в полях пользователя"""
 
-    user = User.get_user_by_id(user_id)
     all_users = User.get_users()
+    user = User.get_user_by_id(user_id)
 
-    if not user:
-        abort(404)
     if not request.json:
         abort(400)
+    if not user:
+        abort(404)
+    user = user[0]
 
-    if 'name' in request.json:
-        if type(request.json['name']) != str:
-            abort(400)
-        all_users[all_users.index(user[0])]['name'] = request.json['name']
-        User.write_in_file_users(all_users)
+    for field in request.json:
+        all_users[all_users.index(user)][field] = request.json[field]
+        user[field] = request.json[field]
 
-    if 'age' in request.json:
-        if type(request.json['age']) != int:
-            abort(400)
+    all_users[all_users.index(user)]['last_update_datetime'] = \
+        datetime.now().strftime('%d.%m.%Y %H:%M')
 
-        all_users[all_users.index(user[0])]['age'] = request.json['age']
-        User.write_in_file_users(all_users)
-
+    User.write_in_file_users(all_users)
     return jsonify({'result': True})
 
 
@@ -83,4 +85,5 @@ def bad_request(error):
 
 
 if __name__ == '__main__':
+
     app.run(debug=True)
