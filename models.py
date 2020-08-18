@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 import json, os
 
-class User(object):
+class User:
     """Класс пользователя, принимает в качестве полей:
     1. Имя пользователя (str) - обязательный
     2. Возраст (int) - опционально, можно не вводить, тогда будет None"""
@@ -20,7 +20,7 @@ class User(object):
 
     @property
     def get_new_id(self):
-        """id_counter содержит последний присвоенный id
+        """ файл id_counter содержит последний присвоенный id
         Считать последний присвоенный id
         Присвоить новому пользователю id + 1
         Записать новый id в файл"""
@@ -33,6 +33,7 @@ class User(object):
 
     @staticmethod
     def write_in_file_users(data):
+        """Записывает в файл новые данные"""
         with open('users.json', 'w') as dump_json:
             json.dump(data, dump_json)
 
@@ -67,5 +68,4 @@ class User(object):
         }
 
         data.append(user_data)
-
         self.write_in_file_users(data)
